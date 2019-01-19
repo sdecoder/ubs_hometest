@@ -1,4 +1,4 @@
-package org.hometest.ubs.ubs_hometest;
+package Protocols;
 import java.util.Set;
 
 public interface ErrorListener {
