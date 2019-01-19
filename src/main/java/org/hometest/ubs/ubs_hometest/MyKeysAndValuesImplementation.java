@@ -11,6 +11,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class MyKeysAndValuesImplementation implements KeysAndValues {
@@ -30,7 +31,7 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 	};
 
 	private boolean atomGroupPrepared = false;
-	final private Map<String, String> innerMapper = new TreeMap<String, String>(customizedComparator);
+	final private Map<String, String> innerMapper = new TreeMap<>(customizedComparator);
 	final private Set<String> AtomicGroupDefinition = new TreeSet<>();
 	final private List<String> atomicGroupKeyList = new LinkedList<>();
 	final private List<String> atomicGroupValueList = new LinkedList<>();
@@ -56,6 +57,10 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 	 */
 	@Override
 	public void accept(String kvPairs) {
+		if (kvPairs == null) {
+			this.myErrorListener.onError("found null input string, ignore...");
+			return;
+		}
 		final String[] components = kvPairs.split(",");
 		for (String component : components) {
 			processSinglePair(component.trim());
@@ -70,6 +75,9 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 		validateAtomicGroup();
 
 		StringBuilder sBuilder = new StringBuilder();
+		if (innerMapper.size() == 0)
+			return StringUtils.EMPTY;
+
 		for (String key : innerMapper.keySet()) {
 			sBuilder.append(key);
 			sBuilder.append("=");
@@ -77,12 +85,14 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 			sBuilder.append("\n");
 		}
 		// remove the last "\n"
-		return sBuilder.substring(0, sBuilder.length() - 1);
+		sBuilder.setLength(sBuilder.length() - 1);
+		return sBuilder.toString();
 	}
 
 	private void validateAtomicGroup() {
 		if (atomicGroupKeyList.size() == 0)
 			return;
+
 		if (atomicGroupKeyList.size() < AtomicGroupDefinition.size()) {
 			final Set<String> missing = new HashSet<>();
 			missing.addAll(AtomicGroupDefinition);
@@ -90,7 +100,10 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 
 			myErrorListener.onIncompleteAtomicGroup(AtomicGroupDefinition, missing);
 			if (!atomGroupPrepared)
-				// since the AtomicGroup is NOT complete, so we remove the partial keys;
+				/*
+				 * since the AtomicGroup is NOT complete, so we remove the partial keys; that
+				 * is, partial keys are NOT allowed to be exhibitted to the user;
+				 */
 				innerMapper.keySet().removeAll(atomicGroupKeyList);
 		}
 	}
@@ -144,6 +157,8 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 	}
 
 	private void updateKV(final String key, final String value) {
+		if (key == null || value == null)
+			return;
 		if (!innerMapper.containsKey(key)) {
 			innerMapper.put(key, value);
 		} else {
