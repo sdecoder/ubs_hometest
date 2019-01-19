@@ -112,7 +112,7 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 	}
 
 	private boolean isCompleteAtomGroup(List<String> testList) {
-		Set<String> testSet = new HashSet<String>(testList);
+		final Set<String> testSet = new HashSet<String>(testList);
 		if (testSet.size() != AtomicGroupDefinition.size())
 			return false;
 		if (AtomicGroupDefinition.containsAll(testSet))
