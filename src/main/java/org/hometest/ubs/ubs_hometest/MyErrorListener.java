@@ -2,6 +2,8 @@ package org.hometest.ubs.ubs_hometest;
 
 import java.util.Set;
 
+import Protocols.ErrorListener;
+
 public class MyErrorListener implements ErrorListener {
 	public void onError(String msg) {
 		System.err.println("[ERROR] Message: " + msg);

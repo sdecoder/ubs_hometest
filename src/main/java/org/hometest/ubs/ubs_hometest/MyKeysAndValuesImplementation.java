@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import Protocols.ErrorListener;
+import Protocols.KeysAndValues;
+
 public class MyKeysAndValuesImplementation implements KeysAndValues {
 
 	/*
@@ -108,8 +111,8 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 		}
 	}
 
-	private boolean isCompleteAtomGroup(List<String> testObj) {
-		Set<String> testSet = new HashSet<String>(testObj);
+	private boolean isCompleteAtomGroup(List<String> testList) {
+		Set<String> testSet = new HashSet<String>(testList);
 		if (testSet.size() != AtomicGroupDefinition.size())
 			return false;
 		if (AtomicGroupDefinition.containsAll(testSet))
@@ -119,9 +122,12 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 
 	private void processSinglePair(final String kvPair) {
 
+		/*
+		 * don't allow there exist more than one =
+		 */
 		final String[] components = kvPair.split("=");
 		if (components.length != 2) {
-			myErrorListener.onError("component format error!");
+			myErrorListener.onError("component format error for this key-value pair: " + kvPair);
 			return;
 		}
 
@@ -129,6 +135,15 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 		final int valueIndx = 1;
 		final String key = components[keyIndex].trim();
 		final String value = components[valueIndx].trim();
+		if (key.equals(StringUtils.EMPTY)) {
+			myErrorListener.onError("empty key found for this key-value pair: " + kvPair);
+			return;
+		}
+
+		if (value.equals(StringUtils.EMPTY)) {
+			myErrorListener.onError("empty value found for this key-value pair: " + kvPair);
+			return;
+		}
 
 		// detect the atomic group:
 		if (AtomicGroupDefinition.size() != 0 && AtomicGroupDefinition.contains(key)) {
@@ -144,8 +159,11 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 						updateKV(atomKey, atomValue);
 					}
 				} else {
-					// this is overlapped case:
-					myErrorListener.onError("keys within the same group cannot 'overlap'");
+					/*
+					 * We detected a group but it contains 2+ duplicated elements This is treated as
+					 * the overlap issue;
+					 */
+					myErrorListener.onError("keys within the same group cannot 'overlap': " + atomicGroupKeyList);
 				}
 				atomicGroupKeyList.clear();
 				atomicGroupValueList.clear();

@@ -1,4 +1,4 @@
-package org.hometest.ubs.ubs_hometest;
+package Protocols;
 /*### void accept(String s)
 
  * kvPairs = zero, one or more comma separated, key-value pairs (e.g. "pi=314159,hello=world")
