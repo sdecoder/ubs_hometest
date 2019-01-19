@@ -2,8 +2,6 @@ package org.hometest.ubs.ubs_hometest;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.rules.TestName;
 import org.junit.runners.MethodSorters;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
