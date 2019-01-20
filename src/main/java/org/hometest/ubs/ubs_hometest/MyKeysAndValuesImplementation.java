@@ -51,8 +51,12 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 	}
 
 	private void defineAtomicGroup(String[] members) {
-		for (final String member : members)
-			AtomicGroupDefinition.add(member);
+		try {
+			for (final String member : members)
+				AtomicGroupDefinition.add(member);
+		} catch (Exception e) {
+			myErrorListener.onError("Exception found on defining the AtomicGroup: " + members.toString(), e);
+		}
 	}
 
 	/*
@@ -64,9 +68,13 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 			this.myErrorListener.onError("found null input string, ignore...");
 			return;
 		}
-		final String[] components = kvPairs.split(",");
-		for (String component : components) {
-			processSinglePair(component.trim());
+		try {
+			final String[] components = kvPairs.split(",");
+			for (String kvpair : components) {
+				processSinglePair(kvpair.trim());
+			}
+		} catch (Exception e) {
+			myErrorListener.onError("Exception found on accepting kvPairs input: " + kvPairs, e);
 		}
 	}
 
@@ -75,130 +83,157 @@ public class MyKeysAndValuesImplementation implements KeysAndValues {
 	 */
 	@Override
 	public String display() {
-		validateAtomicGroup();
+		try {
+			validateAtomicGroup();
 
-		StringBuilder sBuilder = new StringBuilder();
-		if (innerMapper.size() == 0)
-			return StringUtils.EMPTY;
+			StringBuilder sBuilder = new StringBuilder();
+			if (innerMapper.size() == 0)
+				return StringUtils.EMPTY;
 
-		for (String key : innerMapper.keySet()) {
-			sBuilder.append(key);
-			sBuilder.append("=");
-			sBuilder.append(innerMapper.get(key));
-			sBuilder.append("\n");
+			for (String key : innerMapper.keySet()) {
+				sBuilder.append(key);
+				sBuilder.append("=");
+				sBuilder.append(innerMapper.get(key));
+				sBuilder.append("\n");
+			}
+			// remove the last "\n"
+			sBuilder.setLength(sBuilder.length() - 1);
+			return sBuilder.toString();
+		} catch (Exception e) {
+			myErrorListener.onError("Error occurs when displaying the result", e);
 		}
-		// remove the last "\n"
-		sBuilder.setLength(sBuilder.length() - 1);
-		return sBuilder.toString();
+		return StringUtils.EMPTY;
 	}
 
 	private void validateAtomicGroup() {
-		if (atomicGroupKeyList.size() == 0)
-			return;
+		try {
+			if (atomicGroupKeyList.size() == 0)
+				return;
 
-		if (atomicGroupKeyList.size() < AtomicGroupDefinition.size()) {
-			final Set<String> missing = new HashSet<>();
-			missing.addAll(AtomicGroupDefinition);
-			missing.removeAll(atomicGroupKeyList);
+			if (atomicGroupKeyList.size() < AtomicGroupDefinition.size()) {
+				final Set<String> missing = new HashSet<>();
+				missing.addAll(AtomicGroupDefinition);
+				missing.removeAll(atomicGroupKeyList);
 
-			myErrorListener.onIncompleteAtomicGroup(AtomicGroupDefinition, missing);
-			if (!atomGroupPrepared)
-				/*
-				 * since the AtomicGroup is NOT complete, so we remove the partial keys; that
-				 * is, partial keys are NOT allowed to be exhibitted to the user;
-				 */
-				innerMapper.keySet().removeAll(atomicGroupKeyList);
+				myErrorListener.onIncompleteAtomicGroup(AtomicGroupDefinition, missing);
+				if (!atomGroupPrepared)
+					/*
+					 * since the AtomicGroup is NOT complete, so we remove the partial keys; that
+					 * is, partial keys are NOT allowed to be exhibitted to the user;
+					 */
+					innerMapper.keySet().removeAll(atomicGroupKeyList);
+			}
+		} catch (Exception e) {
+			myErrorListener.onError("Error occurs when validating the AtomicGroup", e);
 		}
 	}
 
 	private boolean isCompleteAtomGroup(List<String> testList) {
-		final Set<String> testSet = new HashSet<String>(testList);
-		if (testSet.size() != AtomicGroupDefinition.size())
-			return false;
-		if (AtomicGroupDefinition.containsAll(testSet))
-			return true;
+		try {
+			final Set<String> testSet = new HashSet<String>(testList);
+			if (testSet.size() != AtomicGroupDefinition.size())
+				return false;
+			if (AtomicGroupDefinition.containsAll(testSet))
+				return true;
+		} catch (Exception e) {
+			myErrorListener.onError("Error occurs when checking if the AtomicGroup is complete: " + testList.toString(), e);
+		}
 		return false;
 	}
 
 	private void processSinglePair(final String kvPair) {
-
-		/*
-		 * don't allow there exist more than one =
-		 */
-		final String[] components = kvPair.split("=");
-		if (components.length != 2) {
-			myErrorListener.onError("component format error for this key-value pair: " + kvPair);
-			return;
-		}
-
-		final int keyIndex = 0;
-		final int valueIndx = 1;
-		final String key = components[keyIndex].trim();
-		final String value = components[valueIndx].trim();
-		if (key.equals(StringUtils.EMPTY)) {
-			myErrorListener.onError("empty key found for this key-value pair: " + kvPair);
-			return;
-		}
-
-		if (value.equals(StringUtils.EMPTY)) {
-			myErrorListener.onError("empty value found for this key-value pair: " + kvPair);
-			return;
-		}
-
-		// detect the atomic group:
-		if (AtomicGroupDefinition.size() != 0 && AtomicGroupDefinition.contains(key)) {
-			atomicGroupKeyList.add(key);
-			atomicGroupValueList.add(value);
-			if (atomicGroupKeyList.size() == AtomicGroupDefinition.size()) {
-				if (isCompleteAtomGroup(atomicGroupKeyList)) {
-
-					atomGroupPrepared = true;
-					for (int i = 0; i < AtomicGroupDefinition.size(); i++) {
-						final String atomKey = atomicGroupKeyList.get(i);
-						final String atomValue = atomicGroupValueList.get(i);
-						updateKV(atomKey, atomValue);
-					}
-				} else {
-					/*
-					 * We detected a group but it contains 2+ duplicated elements This is treated as
-					 * the overlap issue;
-					 */
-					myErrorListener.onError("keys within the same group cannot 'overlap': " + atomicGroupKeyList);
-				}
-				atomicGroupKeyList.clear();
-				atomicGroupValueList.clear();
+		try {
+			/*
+			 * don't allow there exist more than one =
+			 */
+			final String[] components = kvPair.split("=");
+			if (components.length != 2) {
+				myErrorListener.onError("component format error for this key-value pair: " + kvPair);
+				return;
 			}
-		} else {
-			// update other kv pair types
-			updateKV(key, value);
+
+			final int keyIndex = 0;
+			final int valueIndx = 1;
+			final String key = components[keyIndex].trim();
+			final String value = components[valueIndx].trim();
+			if (key.equals(StringUtils.EMPTY)) {
+				myErrorListener.onError("empty key found for this key-value pair: " + kvPair);
+				return;
+			}
+
+			if (value.equals(StringUtils.EMPTY)) {
+				myErrorListener.onError("empty value found for this key-value pair: " + kvPair);
+				return;
+			}
+
+			// detect the atomic group:
+			if (AtomicGroupDefinition.size() != 0 && AtomicGroupDefinition.contains(key)) {
+				atomicGroupKeyList.add(key);
+				atomicGroupValueList.add(value);
+				if (atomicGroupKeyList.size() == AtomicGroupDefinition.size()) {
+					if (isCompleteAtomGroup(atomicGroupKeyList)) {
+
+						atomGroupPrepared = true;
+						for (int i = 0; i < AtomicGroupDefinition.size(); i++) {
+							final String atomKey = atomicGroupKeyList.get(i);
+							final String atomValue = atomicGroupValueList.get(i);
+							updateKV(atomKey, atomValue);
+						}
+					} else {
+						/*
+						 * We detected a group but it contains 2+ duplicated elements This is treated as
+						 * the overlap issue;
+						 */
+						myErrorListener.onError("keys within the same group cannot 'overlap': " + atomicGroupKeyList);
+					}
+					atomicGroupKeyList.clear();
+					atomicGroupValueList.clear();
+				}
+			} else {
+				// update other kv pair types
+				updateKV(key, value);
+			}
+		} catch (Exception e) {
+			myErrorListener.onError("Error occurs when processing the single KV pair: " + kvPair, e);
 		}
 	}
 
 	private void updateKV(final String key, final String value) {
-		if (key == null || value == null)
-			return;
-		if (!innerMapper.containsKey(key)) {
-			innerMapper.put(key, value);
-		} else {
 
-			final String innerValue = innerMapper.get(key);
-			if (isNumeric(value) && isNumeric(innerValue)) {
-				// numeric integer values accumulate
-				final Integer sum = Integer.valueOf(innerValue) + Integer.valueOf(value);
-				innerMapper.put(key, String.valueOf(sum));
-			} else {
-				// non-integers overwrite: replace the old values
+		try {
+			if (key == null || value == null)
+				return;
+			if (!innerMapper.containsKey(key)) {
 				innerMapper.put(key, value);
+			} else {
+
+				final String innerValue = innerMapper.get(key);
+				if (isNumeric(value) && isNumeric(innerValue)) {
+					// numeric integer values accumulate
+					final Integer sum = Integer.valueOf(innerValue) + Integer.valueOf(value);
+					innerMapper.put(key, String.valueOf(sum));
+				} else {
+					// non-integers overwrite: replace the old values
+					innerMapper.put(key, value);
+				}
 			}
+		} catch (Exception e) {
+			final String errStr = "Exception found when updating the KV pair: [" + key + "," + value + "]";
+			myErrorListener.onError(errStr, e);
 		}
 	}
 
-	private static boolean isNumeric(String str) {
-		Pattern pattern = Pattern.compile("-?^[0-9]*$");
-		Matcher isNum = pattern.matcher(str);
-		if (!isNum.matches()) {
-			return false;
+	private boolean isNumeric(String str) {
+		try {
+			Pattern pattern = Pattern.compile("-?^[0-9]*$");
+			Matcher isNum = pattern.matcher(str);
+			if (!isNum.matches()) {
+				return false;
+			}
+			return true;
+		} catch (Exception e) {
+			myErrorListener.onError("Exception found when validating number string: " + str, e);
 		}
-		return true;
+		return false;
 	}
 }

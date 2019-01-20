@@ -12,7 +12,7 @@ import junit.framework.TestSuite;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AppTest extends TestCase {
- 
+
 	public AppTest(String testName) {
 		super(testName);
 	}
@@ -277,4 +277,81 @@ public class AppTest extends TestCase {
 		final String exceptedAnswer = stringBuilder.toString();
 		assertEquals(result, exceptedAnswer);
 	}
+
+	public void test27() {
+		kv.accept("441=one,X=Y, 442=2,500=three");
+		kv.accept("442=20");
+		kv.accept("441=two");
+		kv.accept("500=99999");
+
+		final String result = kv.display();
+		final StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("441=two\n");
+		stringBuilder.append("442=22\n");
+		stringBuilder.append("500=99999\n");
+		stringBuilder.append("X=Y");
+		final String exceptedAnswer = stringBuilder.toString();
+		assertEquals(result, exceptedAnswer);
+	}
+
+	public void test28() {
+		kv.accept("441=one,X=Y, 442=2,500=three");
+		kv.accept("442=20.004");
+		kv.accept("441=two");
+		kv.accept("500=99999");
+
+		final String result = kv.display();
+		final StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("441=two\n");
+		stringBuilder.append("442=20.004\n");
+		stringBuilder.append("500=99999\n");
+		stringBuilder.append("X=Y");
+		final String exceptedAnswer = stringBuilder.toString();
+		assertEquals(result, exceptedAnswer);
+	}
+
+	public void test29() {
+		kv.accept("441=1,X=Y, 442=2,500=three");
+		kv.accept("442=20.004");
+		kv.accept("441=1.01");
+		kv.accept("500=99999.500");
+
+		final String result = kv.display();
+		final StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("441=1.01\n");
+		stringBuilder.append("442=20.004\n");
+		stringBuilder.append("500=99999.500\n");
+		stringBuilder.append("X=Y");
+		final String exceptedAnswer = stringBuilder.toString();
+		assertEquals(result, exceptedAnswer);
+	}
+	
+	public void test30() {
+		kv.accept("alpha = 5.0004");
+		kv.accept("alpha = 6");
+		kv.accept("alpha = 6");
+		kv.accept("alpha = 6.001");
+
+		final String result = kv.display();
+		final StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("alpha=6.001");
+		final String exceptedAnswer = stringBuilder.toString();
+		assertEquals(result, exceptedAnswer);
+	}
+	
+	public void test31() {
+		kv.accept("alpha = 5.0004");
+		kv.accept("alpha = 6");
+		kv.accept("alpha = 6");
+		kv.accept("alpha = 6.001");
+		kv.accept("alpha = 7");
+		kv.accept("alpha = 8");
+
+		final String result = kv.display();
+		final StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("alpha=15");
+		final String exceptedAnswer = stringBuilder.toString();
+		assertEquals(result, exceptedAnswer);
+	}
+	
 }
